@@ -1,0 +1,7 @@
+Player 1, 1000
+Player 2, 800
+Player 3, 1400
+Player 4
+Player 5, 100
+Player 6, 2000
+Player 7
