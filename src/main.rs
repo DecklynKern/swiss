@@ -68,7 +68,7 @@ fn main() {
 
     loop {
 
-        let command = read_line("> ");
+        let command = read_line("\n> ");
 
         match command.as_str() {
             "add player" => {
@@ -199,7 +199,7 @@ fn main() {
                 };
 
                 println!("====Round {} Pairings====", rounds.len() + 1);
-                println!("(Board #) White vs Black");
+                println!("[Board #] White vs. Black");
                 println!("-------------------------------------");
 
                 for pairing in pairing_result.games.iter() {
@@ -216,7 +216,7 @@ fn main() {
             "report" => {
 
                 let Some(round) = rounds.last_mut() else {
-                    println!("Error: Tournament has not started");
+                    println!("Error: Tournament has not started.");
                     continue;
                 };
 
@@ -252,6 +252,18 @@ fn main() {
 
                 if !found_game {
                     println!("Error: No active game at board {board_number}.");
+                }
+            }
+            "round" => {
+
+                let Some(round) = rounds.last()
+                else {
+                    println!("Error: Tournament has not started.");
+                    continue;    
+                };
+
+                for game in round.games.iter() {
+                    game.print(&players);
                 }
             }
             _ => println!("Unknown command: {command}")

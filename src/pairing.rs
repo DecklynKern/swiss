@@ -91,7 +91,29 @@ fn sort_by_scores(players: &mut Vec<usize>, scores: &[f32]) {
     players.sort_by(|&id1, &id2| scores[id1].total_cmp(&scores[id2]));
 }
 
+fn try_create_pairing(s1: &mut Vec<usize>, s2: &mut Vec<usize>, already_played: &[Vec<usize>]) -> Option<(usize, usize)> {
+
+    let player1 = *s1.last().unwrap();
+    let player2 = *s2.last().unwrap();
+
+    // add other absolute criteria
+    if !already_played[player1].contains(&player2) && !already_played[player2].contains(&player1) {
+
+        s1.pop();
+        s2.pop();
+
+        Some((player1, player2))
+
+    } else {
+        None
+    }
+}
+
 fn pair_bracket(move_down_players: Vec<usize>, resident_players: Vec<usize>, players: &[Player], already_played: &[Vec<usize>]) -> (Vec<(usize, usize)>, Vec<usize>) {
+
+    if move_down_players.is_empty() && resident_players.len() == 1 {
+        return (Vec::new(), resident_players);
+    }
 
     let m0 = move_down_players.len();
     let max_pairs = ((resident_players.len() + m0) / 2).min(resident_players.len());
@@ -126,24 +148,24 @@ fn pair_bracket(move_down_players: Vec<usize>, resident_players: Vec<usize>, pla
 
     let mut accepted_pairings = Vec::new();
 
+    let mut swap_idx = 1;
+
     while !s1.is_empty() {
 
-        let player1 = *s1.last().unwrap();
-        let player2 = *s2.last().unwrap();
+        if let Some(pairing) = try_create_pairing(&mut s1, &mut s2, already_played) {
+            accepted_pairings.push(pairing);
+            swap_idx = 1;
+        }
+        else {
 
-        // add other absolute criteria
-        if !already_played[player1].contains(&player2) && !already_played[player2].contains(&player1) {
+            if swap_idx == s2.len() {
+                error("Could not find a pairing, crying about it.");
+            }
 
-            s1.pop();
-            s2.pop();
-
-            accepted_pairings.push((player1, player2));
-            continue;
+            s2.swap(0, swap_idx);
+            swap_idx += 1;
 
         }
-
-        error("Wasn't perfect, crying about it.");
-
     }
 
     let next_move_downs: Vec<_> =

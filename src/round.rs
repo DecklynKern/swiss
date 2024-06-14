@@ -26,6 +26,15 @@ impl GameResult {
             Self::Pending => Self::Pending
         }
     }
+
+    pub fn as_letter(self) -> char {
+        match self {
+            Self::Win => 'W',
+            Self::Draw => 'D',
+            Self::Loss => 'L',
+            Self::Pending => ' '
+        }
+    }
 }
 
 pub struct Game {
@@ -38,7 +47,13 @@ pub struct Game {
 impl Game {
 
     pub fn print(&self, players: &[Player]) {
-        println!("({}) {} vs {}", self.board_number, players[self.white_player].name, players[self.black_player].name);
+    
+        if self.result == GameResult::Pending {
+            println!("[{}] {} vs. {}", self.board_number, players[self.white_player].name, players[self.black_player].name);
+        }
+        else {
+            println!("[{}] {} ({}) vs. {} ({})", self.board_number, players[self.white_player].name, self.result.as_letter(), players[self.black_player].name, self.result.opposite().as_letter());
+        }
     }
 }
 
