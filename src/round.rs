@@ -52,7 +52,7 @@ impl Game {
             println!("[{}] {} vs. {}", self.board_number, players[self.white_player].name, players[self.black_player].name);
         }
         else {
-            println!("[{}] {} ({}) vs. {} ({})", self.board_number, players[self.white_player].name, self.result.as_letter(), players[self.black_player].name, self.result.opposite().as_letter());
+            println!("[{}] {} ({}) vs {} ({})", self.board_number, players[self.white_player].name, self.result.as_letter(), players[self.black_player].name, self.result.opposite().as_letter());
         }
     }
 }

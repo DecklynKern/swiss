@@ -84,7 +84,7 @@ fn main() {
                 let mut found = false;
 
                 for player in players.iter_mut() {
-                    if player.name == name {
+                    if player.name.to_lowercase() == name {
                         player.active = false;
                         found = true;
                         break;
@@ -163,7 +163,14 @@ fn main() {
                     let sb_score = sb_scores[id];
                     let (wins, draws, losses, byes) = stats[id];
 
-                    println!("{: >2} | {score: >5.1} | {sb_score: >8.2} | {wins}/{draws}/{losses}/{byes} | {}", idx + 1, players[id].name);
+                    let withdraw_star = if players[id].active {
+                        ' '
+                    }
+                    else {
+                        '*'
+                    };
+
+                    println!("{: >2} | {score: >5.1}{withdraw_star}| {sb_score: >8.2} | {wins}/{draws}/{losses}/{byes} | {}", idx + 1, players[id].name);
                 }
             }
             "start round" => {
@@ -199,7 +206,7 @@ fn main() {
                 };
 
                 println!("====Round {} Pairings====", rounds.len() + 1);
-                println!("[Board #] White vs. Black");
+                println!("[Board #] White vs Black");
                 println!("-------------------------------------");
 
                 for pairing in pairing_result.games.iter() {
@@ -220,7 +227,7 @@ fn main() {
                     continue;
                 };
 
-                let Ok(board_number) = read_line("Enter board number: ").parse::<usize>()
+                let Ok(board_number) = read_line("Board number: ").parse::<usize>()
                 else {
                     println!("Error: Invalid board number.");
                     continue;
@@ -231,7 +238,7 @@ fn main() {
                 for game in round.games.iter_mut() {
                     if board_number == game.board_number {
 
-                        let result_string = read_line(&format!("Enter result for white player ({}) [W]in/[D]raw/[L]oss/[U]nreport: ", players[game.white_player].name));
+                        let result_string = read_line(&format!("Result for white player ({}) [W]in/[D]raw/[L]oss/[U]nreport: ", players[game.white_player].name));
                     
                         game.result = match result_string.to_lowercase().chars().nth(0).unwrap() {
                             'w' => GameResult::Win,
