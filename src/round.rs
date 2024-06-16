@@ -1,4 +1,4 @@
-use crate::{player::*, pairing::Pairing};
+use crate::player::*;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum GameResult {

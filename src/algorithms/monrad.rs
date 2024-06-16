@@ -59,7 +59,7 @@ fn try_use_bye_player(bye_player: Option<PlayerID>, players_by_score: &PlayerIDL
 
     let mut pairs = using_players.pair_off_in_order();
 
-    create_valid_pairs(&mut pairs, &already_played).then(|| pairs)
+    create_valid_pairs(&mut pairs, already_played).then_some(pairs)
 
 }
 

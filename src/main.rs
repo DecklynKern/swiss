@@ -12,6 +12,7 @@ use pairing::*;
 use error::*;
 
 use std::io::{Read, Write};
+use std::fs::File;
 
 fn main() {
 
@@ -37,7 +38,7 @@ fn main() {
 
         println!("Reading player data from file: {}", args[1]);
         
-        let Ok(mut file) = std::fs::File::open(args[1].clone())
+        let Ok(mut file) = File::open(args[1].clone())
         else {
             error("File not found");
         };
@@ -150,6 +151,9 @@ fn main() {
                     }
                 }
 
+                let mut prev_score = f32::MIN;
+                let mut placing = 0;
+
                 println!("====Round {} Standings====", tournament.rounds.len());
                 println!("## | Score | SB Score | W/D/L/B | Name");
                 println!("---|-------|----------|---------|------------");
@@ -160,6 +164,11 @@ fn main() {
                     let sb_score = sb_scores[id];
                     let (wins, draws, losses, byes) = stats[id];
 
+                    if sb_score != prev_score {
+                        placing = idx + 1;
+                        prev_score = sb_score;
+                    }
+
                     let withdraw_star = if tournament.players[id].active {
                         ' '
                     }
@@ -167,7 +176,7 @@ fn main() {
                         '*'
                     };
 
-                    println!("{: >2} | {score: >5.1}{withdraw_star}| {sb_score: >8.2} | {wins}/{draws}/{losses}/{byes} | {}", idx + 1, tournament.players[id].name);
+                    println!("{: >2} | {score: >5.1}{withdraw_star}| {sb_score: >8.2} | {wins}/{draws}/{losses}/{byes} | {}", placing, tournament.players[id].name);
                 }
             }
             "start" => {
@@ -282,8 +291,29 @@ fn main() {
                     game.print(&tournament.players);
                 }
             }
+            "export" => {
+
+                let filename = if split.len() > 1 {
+                    split[1..].join(" ")
+                }
+                else {
+                    read_line("Filename: ")
+                };
+
+                let Ok(file) = File::options()
+                    .write(true)
+                    .create_new(true)
+                    .open(filename)
+                else {
+                    println!("Error: File already exists");
+                    continue;
+                };
+
+                todo!()
+                
+            }
             "list" => {
-                println!("Commands: [add, remove, standings, start, round, games, list]");
+                println!("Commands: [add, remove, standings, start, round, games, export, list]");
             }
             _ => println!("Unknown command: {}", command)
         }

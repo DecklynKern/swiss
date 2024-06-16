@@ -1,9 +1,5 @@
 use crate::*;
 
-fn coin_flip() -> bool {
-    rand::random::<bool>()
-}
-
 pub struct Pairing {
     pub white_player: PlayerID,
     pub black_player: PlayerID
@@ -19,7 +15,7 @@ impl Pairing {
     }
 
     pub fn randomized(player1: PlayerID, player2: PlayerID) -> Self {
-        if coin_flip() {
+        if rand::random::<bool>() {
             Self::new(player1, player2)
         }
         else {
@@ -34,7 +30,6 @@ impl Pairing {
     
         let mut grant_player1_preference = true;
     
-        // add more conditions
         if colour_difference2.abs() > colour_difference1.abs() {
             grant_player1_preference = false;
         }

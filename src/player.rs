@@ -25,10 +25,6 @@ pub struct PlayerIDList(pub Vec<PlayerID>);
 
 impl PlayerIDList {
 
-    pub fn new() -> Self {
-        Self(Vec::new())
-    }
-
     pub fn odd(&self) -> bool {
         self.0.len() % 2 == 1
     }
@@ -63,10 +59,6 @@ impl PlayerIDList {
 
         None
 
-    }
-
-    pub fn sort_by_scores_descending(&mut self, scores: &[f32]) {
-        self.0.sort_by(|&id1, &id2| scores[id1].total_cmp(&scores[id2]));
     }
 
     pub fn sort_by_scores_ascending(&mut self, scores: &[f32]) {
