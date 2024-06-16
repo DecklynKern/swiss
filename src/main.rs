@@ -1,12 +1,15 @@
 mod player;
 mod round;
 mod pairing;
-mod util;
+mod tournament;
+mod algorithms;
+mod error;
 
 use player::*;
 use round::*;
+use tournament::*;
 use pairing::*;
-use util::*;
+use error::*;
 
 use std::io::{Read, Write};
 
@@ -28,9 +31,9 @@ fn main() {
 
     let args = std::env::args().collect::<Vec<_>>();
 
-    let mut players: Vec<Player> = Vec::new();
+    let mut tournament = Tournament::new();
 
-    if args.len() >= 1 {
+    if args.len() > 1 {
 
         println!("Reading player data from file: {}", args[1]);
         
@@ -59,55 +62,49 @@ fn main() {
 
             });
 
-            players.push(Player::new(name, rating));
+            tournament.add_player(name, rating);
 
         }
     };
-    
-    let mut rounds: Vec<Round> = Vec::new();
 
     loop {
 
         let command = read_line("\n> ");
+        let split: Vec<_> = command.split(' ').collect();
 
-        match command.as_str() {
-            "add player" => {
-
-                players.push(Player::new(
+        match split[0] {
+            "add" => {
+                tournament.add_player(
                     read_line("Name: "),
                     read_line("Rating (leave blank for unknown): ").parse().ok()
-                ));
+                );
             }
-            "remove player" => {
+            "remove" => {
 
-                let name = read_line("Name: ");
-                let mut found = false;
-
-                for player in players.iter_mut() {
-                    if player.name.to_lowercase() == name {
-                        player.active = false;
-                        found = true;
-                        break;
-                    }
+                let name = if split.len() > 1 {
+                    split[1..].join(" ")
                 }
+                else {
+                    read_line("Name: ")
+                };
 
-                if !found {
+                if !tournament.remove_player(&name) {
                     println!("Error: could not find player \"{name}\".");
                 }
             }
             "standings" => {
 
-                let mut player_ids: Vec<_> = (0..players.len()).collect();
+                let mut player_ids = tournament.get_all_player_ids().0;
 
                 let scores: Vec<_> =
                     player_ids.iter()
                         .cloned()
-                        .map(|id| calc_score(id, &rounds))
+                        .map(|id| tournament.calc_score(id))
                         .collect();
 
                 let sb_scores: Vec<_> =
                     player_ids.iter()
-                        .map(|player| calc_sonneborn_berger_score(*player, &scores, &rounds))
+                        .map(|player| tournament.calc_sonneborn_berger_score(*player, &scores))
                         .collect();
 
                 player_ids.sort_by(|&id1, &id2| {
@@ -128,7 +125,7 @@ fn main() {
                         .map(|_| (0, 0, 0, 0))
                         .collect();
 
-                for round in rounds.iter() {
+                for round in tournament.rounds.iter() {
 
                     if let Some(bye_player) = round.bye_player {
                         stats[bye_player].3 += 1;
@@ -153,7 +150,7 @@ fn main() {
                     }
                 }
 
-                println!("====Round {} Standings====", rounds.len());
+                println!("====Round {} Standings====", tournament.rounds.len());
                 println!("## | Score | SB Score | W/D/L/B | Name");
                 println!("---|-------|----------|---------|------------");
 
@@ -163,19 +160,19 @@ fn main() {
                     let sb_score = sb_scores[id];
                     let (wins, draws, losses, byes) = stats[id];
 
-                    let withdraw_star = if players[id].active {
+                    let withdraw_star = if tournament.players[id].active {
                         ' '
                     }
                     else {
                         '*'
                     };
 
-                    println!("{: >2} | {score: >5.1}{withdraw_star}| {sb_score: >8.2} | {wins}/{draws}/{losses}/{byes} | {}", idx + 1, players[id].name);
+                    println!("{: >2} | {score: >5.1}{withdraw_star}| {sb_score: >8.2} | {wins}/{draws}/{losses}/{byes} | {}", idx + 1, tournament.players[id].name);
                 }
             }
-            "start round" => {
+            "start" => {
 
-                if let Some(prev_round) = rounds.last() {
+                if let Some(prev_round) = tournament.rounds.last() {
 
                     let mut active_games = Vec::new();
 
@@ -190,7 +187,7 @@ fn main() {
                         println!("Error: The following games are still ongoing, report a score for them:");
     
                         for game_idx in active_games {
-                            prev_round.games[game_idx].print(&players);
+                            prev_round.games[game_idx].print(&tournament.players);
                         }
     
                         continue;
@@ -198,36 +195,43 @@ fn main() {
                     }
                 }
 
-                let pairing_result = if rounds.is_empty() {
-                    generate_round_1(&players)
+                let pairing_result = if !tournament.started() {
+                    Round::from_seeding(&tournament)
                 }
                 else {
-                    generate_round_dutch(&players, &rounds)
+                    Round::generate_monrad(&tournament)
                 };
 
-                println!("====Round {} Pairings====", rounds.len() + 1);
+                println!("====Round {} Pairings====", tournament.rounds.len() + 1);
                 println!("[Board #] White vs Black");
                 println!("-------------------------------------");
 
                 for pairing in pairing_result.games.iter() {
-                    pairing.print(&players);
+                    pairing.print(&tournament.players);
                 }
 
                 if let Some(bye_player) = pairing_result.bye_player {
-                    println!("Bye: {}", players[bye_player].name)
+                    println!("Bye: {}", tournament.players[bye_player].name)
                 }
 
-                rounds.push(pairing_result);
+                tournament.rounds.push(pairing_result);
 
             }
             "report" => {
 
-                let Some(round) = rounds.last_mut() else {
+                let Some(round) = tournament.rounds.last_mut() else {
                     println!("Error: Tournament has not started.");
                     continue;
                 };
 
-                let Ok(board_number) = read_line("Board number: ").parse::<usize>()
+                let number_text = if split.len() > 1 {
+                    split[1].to_string()
+                }
+                else {
+                    read_line("Board number: ")
+                };
+
+                let Ok(board_number) = number_text.parse::<PlayerID>()
                 else {
                     println!("Error: Invalid board number.");
                     continue;
@@ -238,9 +242,14 @@ fn main() {
                 for game in round.games.iter_mut() {
                     if board_number == game.board_number {
 
-                        let result_string = read_line(&format!("Result for white player ({}) [W]in/[D]raw/[L]oss/[U]nreport: ", players[game.white_player].name));
+                        let result_string = if split.len() > 2 {
+                            split[2].to_string()
+                        }
+                        else {
+                            read_line(&format!("Result for white player ({}) [W]in/[D]raw/[L]oss/[U]nreport: ", tournament.players[game.white_player].name))
+                        };
                     
-                        game.result = match result_string.to_lowercase().chars().nth(0).unwrap() {
+                        game.result = match result_string.to_lowercase().chars().next().unwrap() {
                             'w' => GameResult::Win,
                             'd' => GameResult::Draw,
                             'l' => GameResult::Loss,
@@ -261,19 +270,22 @@ fn main() {
                     println!("Error: No active game at board {board_number}.");
                 }
             }
-            "round" => {
+            "games" => {
 
-                let Some(round) = rounds.last()
+                let Some(round) = tournament.rounds.last()
                 else {
                     println!("Error: Tournament has not started.");
                     continue;    
                 };
 
                 for game in round.games.iter() {
-                    game.print(&players);
+                    game.print(&tournament.players);
                 }
             }
-            _ => println!("Unknown command: {command}")
+            "list" => {
+                println!("Commands: [add, remove, standings, start, round, games, list]");
+            }
+            _ => println!("Unknown command: {}", command)
         }
     }
 }

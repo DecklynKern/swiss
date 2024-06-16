@@ -1,4 +1,4 @@
-use crate::player::*;
+use crate::{player::*, pairing::Pairing};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum GameResult {
@@ -38,9 +38,9 @@ impl GameResult {
 }
 
 pub struct Game {
-    pub white_player: usize,
-    pub black_player: usize,
-    pub board_number: usize,
+    pub white_player: PlayerID,
+    pub black_player: PlayerID,
+    pub board_number: PlayerID,
     pub result: GameResult
 }
 
@@ -59,51 +59,9 @@ impl Game {
 
 pub struct Round {
     pub games: Vec<Game>,
-    pub bye_player: Option<usize>
+    pub bye_player: Option<PlayerID>
 }
 
-pub fn calc_score(player_id: usize, rounds: &[Round]) -> f32 {
-
-    rounds.iter()
-        .map(|round| {
-
-            if let Some(bye_player) = round.bye_player {
-                if bye_player == player_id {
-                    return GameResult::Win.score();
-                }
-            }
-        
-            for game in round.games.iter() {
-                if game.white_player == player_id {
-                    return game.result.score();
-                }
-                else if game.black_player == player_id {
-                    return game.result.opposite().score();
-                }
-            }
-
-            0.0
-
-        })
-        .sum()
-}
-
-pub fn calc_sonneborn_berger_score(player_id: usize, player_scores: &[f32], rounds: &[Round]) -> f32 {
-
-    rounds.iter()
-        .map(|round| {
-
-            for game in round.games.iter() {
-                if game.white_player == player_id {
-                    return game.result.score() * player_scores[game.black_player];
-                }
-                else if game.black_player == player_id {
-                    return game.result.opposite().score() * player_scores[game.white_player];
-                }
-            }
-
-            0.0
-
-        })
-        .sum()
+pub fn has_already_played(player1: PlayerID, player2: PlayerID, already_played: &[Vec<PlayerID>]) -> bool {
+    already_played[player1].contains(&player2) || already_played[player2].contains(&player1)
 }
