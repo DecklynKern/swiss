@@ -2,17 +2,13 @@ mod monrad;
 mod dutch;
 mod danish;
 
-pub use monrad::*;
-pub use dutch::*;
-pub use danish::*;
-
 use crate::*;
 
 impl Round {
 
     pub fn from_pairings(pairings: Vec<Pairing>, bye_player: Option<PlayerID>) -> Self {
 
-        Self {
+        let round = Self {
             games: pairings.iter()
                 .enumerate()
                 .map(|(idx, pairing)| Game {
@@ -23,7 +19,10 @@ impl Round {
                 })
                 .collect::<Vec<_>>(),
             bye_player
-        }
+        };
+
+        round
+
     }
 
     pub fn from_seeding(tournament: &Tournament) -> Self {

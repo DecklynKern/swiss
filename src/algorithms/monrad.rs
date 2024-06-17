@@ -57,7 +57,7 @@ fn try_use_bye_player(bye_player: Option<PlayerID>, players_by_score: &PlayerIDL
         using_players.remove(bye);
     }
 
-    let mut pairs = using_players.pair_off_in_order();
+    let mut pairs = using_players.pair_off_alternating_sides();
 
     create_valid_pairs(&mut pairs, already_played).then_some(pairs)
 

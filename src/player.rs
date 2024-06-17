@@ -37,7 +37,8 @@ impl PlayerIDList {
         
         let bye_players = tournament.get_bye_players();
 
-        (0..tournament.players.len())
+        self.0.iter()
+            .cloned()
             .filter(|id| !bye_players.contains(id))
             .collect()
 
