@@ -310,7 +310,7 @@ fn main() {
                     read_line("Filename: ")
                 };
 
-                let Ok(file) = File::options()
+                let Ok(mut file) = File::options()
                     .write(true)
                     .create_new(true)
                     .open(filename)
@@ -319,7 +319,15 @@ fn main() {
                     continue;
                 };
 
-                todo!()
+                for (idx, round) in tournament.rounds.iter().enumerate() {
+                    
+                    let _ = file.write(format!("\nRound {}\n", idx + 1).as_bytes());
+
+                    for game in round.games.iter() {
+                        let _ = file.write(game.as_string(&tournament.players).as_bytes());
+                        let _ = file.write("\n".as_bytes());
+                    }
+                }
                 
             }
             "list" => {
