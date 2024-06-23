@@ -71,7 +71,16 @@ fn pair_bracket(move_down_players: PlayerIDList, resident_players: PlayerIDList,
         else {
 
             if swap_idx == s2.len() {
-                return None;
+
+                let next_move_downs: Vec<_> =
+                    s2.iter()
+                        .chain(limbo.iter())
+                        .chain(s1.iter())
+                        .cloned()
+                        .collect();
+
+                return Some((accepted_pairings, PlayerIDList(next_move_downs)));
+
             }
 
             s2.swap(0, swap_idx);
