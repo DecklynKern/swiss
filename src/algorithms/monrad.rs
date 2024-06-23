@@ -57,7 +57,7 @@ fn try_use_bye_player(bye_player: Option<PlayerID>, players_by_score: &PlayerIDL
         using_players.remove(bye);
     }
 
-    let mut pairs = using_players.pair_off_alternating_sides();
+    let mut pairs = using_players.pair_off_in_order();
 
     create_valid_pairs(&mut pairs, already_played).then_some(pairs)
 
@@ -66,10 +66,11 @@ fn try_use_bye_player(bye_player: Option<PlayerID>, players_by_score: &PlayerIDL
 impl Round {
 
     pub fn generate_monrad(tournament: &Tournament) -> Self {
+
         let scores = tournament.get_player_scores();
         
         let mut players_by_score = tournament.get_active_player_ids();
-        players_by_score.sort_by_scores_ascending(&scores);
+        players_by_score.sort_by_scores_descending(&scores);
         players_by_score.0.reverse();
         
         let bye_players = players_by_score.get_players_without_bye(tournament);

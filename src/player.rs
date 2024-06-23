@@ -20,7 +20,7 @@ impl Player {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct PlayerIDList(pub Vec<PlayerID>);
 
 impl PlayerIDList {
@@ -64,6 +64,10 @@ impl PlayerIDList {
 
     pub fn sort_by_scores_ascending(&mut self, scores: &[f32]) {
         self.0.sort_by(|&id1, &id2| scores[id2].total_cmp(&scores[id1]));
+    }
+
+    pub fn sort_by_scores_descending(&mut self, scores: &[f32]) {
+        self.0.sort_by(|&id1, &id2| scores[id1].total_cmp(&scores[id2]));
     }
 
     pub fn pair_off_in_order(&self) -> Vec<(PlayerID, PlayerID)> {

@@ -208,7 +208,7 @@ fn main() {
                     Round::from_seeding(&tournament)
                 }
                 else {
-                    Round::generate_monrad(&tournament)
+                    Round::generate_dutch(&tournament)
                 };
 
                 let scores = tournament.get_player_scores();
