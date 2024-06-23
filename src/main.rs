@@ -204,7 +204,7 @@ fn main() {
                     }
                 }
 
-                let mut pairing_result = if !tournament.started() {
+                let pairing_result = if !tournament.started() {
                     Round::from_seeding(&tournament)
                 }
                 else {

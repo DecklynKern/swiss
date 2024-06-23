@@ -83,7 +83,8 @@ fn pair_bracket(move_down_players: PlayerIDList, resident_players: PlayerIDList,
 
             }
 
-            s2.swap(0, swap_idx);
+            let s2_len = s2.len() - 1;
+            s2.swap(swap_idx, s2_len);
             swap_idx += 1;
 
         }
