@@ -211,16 +211,6 @@ fn main() {
                     Round::generate_dutch(&tournament)
                 };
 
-                let scores = tournament.get_player_scores();
-                pairing_result.games.sort_by(|game1, game2| {
-
-                    let game1_score = scores[game1.white_player] + scores[game1.black_player];
-                    let game2_score = scores[game2.white_player] + scores[game2.black_player];
-                
-                    game2_score.total_cmp(&game1_score)
-                
-                });
-
                 println!("====Round {} Pairings====", tournament.rounds.len() + 1);
                 println!("[Board #] White vs Black");
                 println!("-------------------------------------");
