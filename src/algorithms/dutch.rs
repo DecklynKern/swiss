@@ -75,8 +75,6 @@ fn try_use_bye_player(bye_player: Option<PlayerID>, players_by_score: &PlayerIDL
 
     }
 
-    pairing_brackets.reverse();
-
     // println!("BYE");
     // println!("{bye_player:?}");
 
@@ -88,12 +86,18 @@ fn try_use_bye_player(bye_player: Option<PlayerID>, players_by_score: &PlayerIDL
     // println!("BRACKETS");
     // println!("{pairing_brackets:?}");
 
+    try_pair_brackets(pairing_brackets, &already_played)
+
+}
+
+fn try_pair_brackets(mut brackets: Vec<PlayerIDList>, already_played: &[PlayerIDList]) -> Option<Vec<(PlayerID, PlayerID)>> {
+
     let mut move_down_players = PlayerIDList::new();
     let mut final_pairings = Vec::new();
 
-    while let Some(pairing_bracket) = pairing_brackets.pop() {
+    for bracket in brackets.iter() {
 
-        let (new_pairings, unpaired_players) = pair_bracket(move_down_players, pairing_bracket, &already_played);
+        let (new_pairings, unpaired_players) = pair_bracket(move_down_players, bracket.clone(), &already_played);
 
         move_down_players = unpaired_players;
 
@@ -102,27 +106,17 @@ fn try_use_bye_player(bye_player: Option<PlayerID>, players_by_score: &PlayerIDL
         }
     }
 
-    if move_down_players.0.len() > 1 {
-        None
-    }
-    else {
+    if move_down_players.0.len() == 0 {
         Some(final_pairings)
     }
-}
+    else if brackets.len() > 1 {
+        
+        let bracket1 = brackets.pop().unwrap();
+        let bracket2 = brackets.pop().unwrap();
 
-fn try_create_pairing(s1: &mut PlayerIDList, s2: &mut PlayerIDList, already_played: &[PlayerIDList]) -> Option<(PlayerID, PlayerID)> {
-
-    let player1 = *s1.0.last().unwrap();
-    let player2 = *s2.0.last().unwrap();
-
-    // add other absolute criteria
-    if !already_played[player1].0.contains(&player2) && !already_played[player2].0.contains(&player1) {
-
-        s1.0.pop();
-        s2.0.pop();
-
-        Some((player1, player2))
-
+        brackets.push(bracket1 + bracket2);
+        try_pair_brackets(brackets, already_played)
+    
     }
     else {
         None
@@ -130,7 +124,6 @@ fn try_create_pairing(s1: &mut PlayerIDList, s2: &mut PlayerIDList, already_play
 }
 
 fn pair_bracket(move_down_players: PlayerIDList, resident_players: PlayerIDList, already_played: &[PlayerIDList]) -> (Vec<(PlayerID, PlayerID)>, PlayerIDList) {
-
 
     if move_down_players.0.is_empty() && resident_players.0.len() == 1 {
         return (Vec::new(), resident_players);
@@ -169,23 +162,31 @@ fn pair_bracket(move_down_players: PlayerIDList, resident_players: PlayerIDList,
 
     let mut accepted_pairings = Vec::new();
 
-    let mut swap_idx = 1;
+    let mut s1_swap_idx = 1;
+    let mut s2_swap_idx = 1;
 
     while !s1.0.is_empty() {
 
         if let Some(pairing) = try_create_pairing(&mut s1, &mut s2, already_played) {
             accepted_pairings.push(pairing);
-            swap_idx = 1;
+            s1_swap_idx = 1;
+            s2_swap_idx = 1;
         }
         else {
 
-            if swap_idx == s2.0.len() {
-                break;
+            if s1_swap_idx == s1.0.len() {
+
+                if s2_swap_idx == s2.0.len() {
+                    break;
+                }
+    
+                s2.0.swap(0, s2_swap_idx);
+                s2_swap_idx += 1;
             }
-
-            s2.0.swap(0, swap_idx);
-            swap_idx += 1;
-
+            else {
+                s1.0.swap(0, s1_swap_idx);
+                s1_swap_idx += 1;
+            }
         }
     }
 
@@ -207,4 +208,23 @@ fn pair_bracket(move_down_players: PlayerIDList, resident_players: PlayerIDList,
 
     (accepted_pairings, next_move_downs)
 
+}
+
+fn try_create_pairing(s1: &mut PlayerIDList, s2: &mut PlayerIDList, already_played: &[PlayerIDList]) -> Option<(PlayerID, PlayerID)> {
+
+    let player1 = *s1.0.last().unwrap();
+    let player2 = *s2.0.last().unwrap();
+
+    // add other absolute criteria
+    if !already_played[player1].0.contains(&player2) && !already_played[player2].0.contains(&player1) {
+
+        s1.0.pop();
+        s2.0.pop();
+
+        Some((player1, player2))
+
+    }
+    else {
+        None
+    }
 }

@@ -99,3 +99,12 @@ impl Debug for PlayerIDList {
         self.0.fmt(f)
     }
 }
+
+impl std::ops::Add for PlayerIDList {
+    
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        Self(self.0.iter().chain(rhs.0.iter()).cloned().collect())
+    }
+} 

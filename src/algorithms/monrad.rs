@@ -25,7 +25,7 @@ fn create_valid_pairs(pairs: &mut [(usize, usize)], already_played: &[PlayerIDLi
         return false;
     }
 
-    for idx in 1..already_played.len() {
+    for idx in 1..pairs.len() {
 
         let swap_a = pairs[0].0;
         let mut swap_b = pairs[idx].0;
@@ -57,7 +57,7 @@ fn try_use_bye_player(bye_player: Option<PlayerID>, players_by_score: &PlayerIDL
         using_players.remove(bye);
     }
 
-    let mut pairs = using_players.pair_off_alternating_sides();
+    let mut pairs = using_players.pair_off_in_order();
 
     create_valid_pairs(&mut pairs, already_played).then_some(pairs)
 
