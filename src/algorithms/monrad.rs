@@ -1,6 +1,6 @@
 use crate::*;
 
-fn top_pair_valid(pairs: &mut [(usize, usize)], already_played: &[Vec<PlayerID>]) -> bool {
+fn top_pair_valid(pairs: &mut [(usize, usize)], already_played: &[PlayerIDList]) -> bool {
     
     let Some(&(player1, player2)) = pairs.first()
     else {
@@ -11,7 +11,7 @@ fn top_pair_valid(pairs: &mut [(usize, usize)], already_played: &[Vec<PlayerID>]
     
 }
 
-fn create_valid_pairs(pairs: &mut [(usize, usize)], already_played: &[Vec<PlayerID>]) -> bool {
+fn create_valid_pairs(pairs: &mut [(usize, usize)], already_played: &[PlayerIDList]) -> bool {
 
     if pairs.is_empty() {
         return true;
@@ -50,14 +50,14 @@ fn create_valid_pairs(pairs: &mut [(usize, usize)], already_played: &[Vec<Player
 
 }
 
-fn try_use_bye_player(bye_player: Option<PlayerID>, players_by_score: &PlayerIDList, already_played: &[Vec<PlayerID>]) -> Option<Vec<(PlayerID, PlayerID)>> {
+fn try_use_bye_player(bye_player: Option<PlayerID>, players_by_score: &PlayerIDList, already_played: &[PlayerIDList]) -> Option<Vec<(PlayerID, PlayerID)>> {
 
     let mut using_players = players_by_score.clone();
     if let Some(bye) = bye_player {
         using_players.remove(bye);
     }
 
-    let mut pairs = using_players.pair_off_in_order();
+    let mut pairs = using_players.pair_off_alternating_sides();
 
     create_valid_pairs(&mut pairs, already_played).then_some(pairs)
 
@@ -66,19 +66,19 @@ fn try_use_bye_player(bye_player: Option<PlayerID>, players_by_score: &PlayerIDL
 impl Round {
 
     pub fn generate_monrad(tournament: &Tournament) -> Self {
-
         let scores = tournament.get_player_scores();
         
         let mut players_by_score = tournament.get_active_player_ids();
-        players_by_score.sort_by_scores_descending(&scores);
+        players_by_score.sort_by_scores_ascending(&scores);
         players_by_score.0.reverse();
-        
-        let bye_players = players_by_score.get_players_without_bye(tournament);
         let mut bye_player = None;
 
         let already_played = tournament.get_already_played();
 
         let pairs = if players_by_score.odd() {
+        
+            let mut bye_players = players_by_score.get_players_without_bye(tournament);
+            bye_players.reverse();
 
             let mut result_pairs = None;
 

@@ -1,5 +1,7 @@
 use crate::tournament::*;
 
+use std::fmt::Debug;
+
 pub type PlayerID = usize;
 
 pub struct Player {
@@ -20,10 +22,14 @@ impl Player {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct PlayerIDList(pub Vec<PlayerID>);
 
 impl PlayerIDList {
+
+    pub fn new() -> Self {
+        Self(Vec::new())
+    }
 
     pub fn odd(&self) -> bool {
         self.0.len() % 2 == 1
@@ -66,10 +72,6 @@ impl PlayerIDList {
         self.0.sort_by(|&id1, &id2| scores[id2].total_cmp(&scores[id1]));
     }
 
-    pub fn sort_by_scores_descending(&mut self, scores: &[f32]) {
-        self.0.sort_by(|&id1, &id2| scores[id1].total_cmp(&scores[id2]));
-    }
-
     pub fn pair_off_in_order(&self) -> Vec<(PlayerID, PlayerID)> {
         self.0.chunks(2)
             .map(|chunk| (chunk[0], chunk[1]))
@@ -89,5 +91,11 @@ impl PlayerIDList {
                 .cloned())
             .collect()
     
+    }
+}
+
+impl Debug for PlayerIDList {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.0.fmt(f)
     }
 }

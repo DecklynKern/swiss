@@ -46,18 +46,14 @@ pub struct Game {
 
 impl Game {
 
-    pub fn as_string(&self, players: &[Player]) -> String {
+    pub fn print(&self, players: &[Player]) {
     
         if self.result == GameResult::Pending {
-            format!("[{}] {} vs. {}", self.board_number, players[self.white_player].name, players[self.black_player].name)
+            println!("[{}] {} vs. {}", self.board_number, players[self.white_player].name, players[self.black_player].name);
         }
         else {
-            format!("[{}] {} ({}) vs {} ({})", self.board_number, players[self.white_player].name, self.result.as_letter(), players[self.black_player].name, self.result.opposite().as_letter())
+            println!("[{}] {} ({}) vs {} ({})", self.board_number, players[self.white_player].name, self.result.as_letter(), players[self.black_player].name, self.result.opposite().as_letter());
         }
-    } 
-
-    pub fn print(&self, players: &[Player]) {
-        println!("{}", self.as_string(players));
     }
 }
 
@@ -66,6 +62,6 @@ pub struct Round {
     pub bye_player: Option<PlayerID>
 }
 
-pub fn has_already_played(player1: PlayerID, player2: PlayerID, already_played: &[Vec<PlayerID>]) -> bool {
-    already_played[player1].contains(&player2) || already_played[player2].contains(&player1)
+pub fn has_already_played(player1: PlayerID, player2: PlayerID, already_played: &[PlayerIDList]) -> bool {
+    already_played[player1].0.contains(&player2) || already_played[player2].0.contains(&player1)
 }

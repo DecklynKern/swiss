@@ -77,15 +77,15 @@ impl Tournament {
     
     }
 
-    pub fn get_already_played(&self) -> Vec<Vec<PlayerID>> {
+    pub fn get_already_played(&self) -> Vec<PlayerIDList> {
     
-        let mut already_played = vec![Vec::new(); self.players.len()];
+        let mut already_played = vec![PlayerIDList::new(); self.players.len()];
     
         for round in self.rounds.iter() {
             for game in round.games.iter() {
     
-                already_played[game.white_player].push(game.black_player);
-                already_played[game.black_player].push(game.white_player);
+                already_played[game.white_player].0.push(game.black_player);
+                already_played[game.black_player].0.push(game.white_player);
     
             }
         }

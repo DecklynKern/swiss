@@ -152,6 +152,7 @@ fn main() {
                 }
 
                 let mut prev_score = f32::MIN;
+                let mut prev_sb_score = f32::MIN;
                 let mut placing = 0;
 
                 println!("====Round {} Standings====", tournament.rounds.len());
@@ -164,9 +165,10 @@ fn main() {
                     let sb_score = sb_scores[id];
                     let (wins, draws, losses, byes) = stats[id];
 
-                    if sb_score != prev_score {
+                    if score != prev_score || sb_score != prev_sb_score {
                         placing = idx + 1;
-                        prev_score = sb_score;
+                        prev_score = score;
+                        prev_sb_score = sb_score;
                     }
 
                     let withdraw_star = if tournament.players[id].active {
@@ -204,12 +206,22 @@ fn main() {
                     }
                 }
 
-                let pairing_result = if !tournament.started() {
+                let mut pairing_result = if !tournament.started() {
                     Round::from_seeding(&tournament)
                 }
                 else {
                     Round::generate_dutch(&tournament)
                 };
+
+                let scores = tournament.get_player_scores();
+                pairing_result.games.sort_by(|game1, game2| {
+
+                    let game1_score = scores[game1.white_player] + scores[game1.black_player];
+                    let game2_score = scores[game2.white_player] + scores[game2.black_player];
+                
+                    game2_score.total_cmp(&game1_score)
+                
+                });
 
                 println!("====Round {} Pairings====", tournament.rounds.len() + 1);
                 println!("[Board #] White vs Black");
@@ -300,7 +312,7 @@ fn main() {
                     read_line("Filename: ")
                 };
 
-                let Ok(mut file) = File::options()
+                let Ok(file) = File::options()
                     .write(true)
                     .create_new(true)
                     .open(filename)
@@ -309,19 +321,23 @@ fn main() {
                     continue;
                 };
 
-                for (idx, round) in tournament.rounds.iter().enumerate() {
-                    
-                    let _ = file.write(format!("\nRound {}\n", idx + 1).as_bytes());
-
-                    for game in round.games.iter() {
-                        let _ = file.write(game.as_string(&tournament.players).as_bytes());
-                        let _ = file.write("\n".as_bytes());
-                    }
-                }
+                todo!()
                 
             }
             "list" => {
                 println!("Commands: [add, remove, standings, start, round, games, export, list]");
+            }
+            // testing only
+            "sweep" => {
+
+                let Some(round) = tournament.rounds.last_mut() else {
+                    println!("Error: Tournament has not started.");
+                    continue;
+                };
+
+                for game in round.games.iter_mut() {
+                    game.result = GameResult::Win;
+                }
             }
             _ => println!("Unknown command: {}", command)
         }
