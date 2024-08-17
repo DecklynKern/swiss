@@ -10,12 +10,11 @@ impl Round {
 
         let round = Self {
             games: pairings.iter()
-                .enumerate()
-                .map(|(idx, pairing)| Game {
+                .map(|pairing| Game {
                     white_player: pairing.white_player,
                     black_player: pairing.black_player,
                     result: GameResult::Pending,
-                    board_number: idx + 1
+                    board_number: 0 // gets assigned later
                 })
                 .collect::<Vec<_>>(),
             bye_player

@@ -223,6 +223,10 @@ fn main() {
                 
                 });
 
+                for (idx, game) in pairing_result.games.iter_mut().enumerate() {
+                    game.board_number = idx as u32 + 1;
+                }
+
                 println!("====Round {} Pairings====", tournament.rounds.len() + 1);
                 println!("[Board #] White vs Black");
                 println!("-------------------------------------");
@@ -252,7 +256,7 @@ fn main() {
                     read_line("Board number: ")
                 };
 
-                let Ok(board_number) = number_text.parse::<PlayerID>()
+                let Ok(board_number) = number_text.parse::<u32>()
                 else {
                     println!("Error: Invalid board number.");
                     continue;

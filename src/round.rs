@@ -40,7 +40,7 @@ impl GameResult {
 pub struct Game {
     pub white_player: PlayerID,
     pub black_player: PlayerID,
-    pub board_number: PlayerID,
+    pub board_number: u32,
     pub result: GameResult
 }
 
