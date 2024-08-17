@@ -44,16 +44,20 @@ pub struct Game {
     pub result: GameResult
 }
 
-impl Game {
-
-    pub fn print(&self, players: &[Player]) {
+impl Game {    
     
+    pub fn as_string(&self, players: &[Player]) -> String {
+
         if self.result == GameResult::Pending {
-            println!("[{}] {} vs. {}", self.board_number, players[self.white_player].name, players[self.black_player].name);
+            format!("[{}] {} vs. {}", self.board_number, players[self.white_player].name, players[self.black_player].name)
         }
         else {
-            println!("[{}] {} ({}) vs {} ({})", self.board_number, players[self.white_player].name, self.result.as_letter(), players[self.black_player].name, self.result.opposite().as_letter());
+            format!("[{}] {} ({}) vs {} ({})", self.board_number, players[self.white_player].name, self.result.as_letter(), players[self.black_player].name, self.result.opposite().as_letter())
         }
+    }
+
+    pub fn print(&self, players: &[Player]) {
+        println!("{}", self.as_string(players));
     }
 }
 
