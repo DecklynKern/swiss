@@ -242,6 +242,77 @@ fn main() {
                 tournament.rounds.push(pairing_result);
 
             }
+            "reject" => {
+                if read_line("Are you sure you want to reject the current round? ").to_lowercase().chars().nth(0).unwrap_or('n') == 'y' {
+                    tournament.rounds.pop();
+                }
+            }
+            "manual" => {
+                
+                let mut remaining_players = tournament.get_active_player_ids();
+                let mut round_pairings: Vec<Pairing> = Vec::new();
+
+                let mut add_round = true;
+
+                while remaining_players.0.len() > 1 {
+
+                    println!("\nCurrent pairings:");
+
+                    for pairing in &round_pairings {
+                        println!("{} vs. {}", tournament.players[pairing.white_player].name, tournament.players[pairing.black_player].name);
+                    }
+
+                    println!("Remaining players:");
+
+                    for (idx, &player) in remaining_players.0.iter().enumerate() {
+                        println!("({}) {}", idx, tournament.players[player].name);
+                    }
+
+                    let response = read_line("Enter white player number ('cancel' to cancel): ");
+
+                    if response == "cancel" {
+                        add_round = false;
+                        break;
+                    }
+
+                    let Ok(player1_idx) = response.parse::<usize>()
+                    else {
+                        println!("Error: invalid index");
+                        continue;
+                    };
+
+                    if player1_idx >= remaining_players.0.len() {
+                        println!("Error: invalid index");
+                        continue;
+                    }
+
+                    let Ok(player2_idx) = read_line("Enter black player number: ").parse::<usize>()
+                    else {
+                        println!("Error: invalid index");
+                        continue;
+                    };
+
+                    if player2_idx >= remaining_players.0.len() {
+                        println!("Error: invalid index");
+                        continue;
+                    }
+
+                    if player1_idx == player2_idx {
+                        println!("Error: indexes match");
+                        continue;
+                    }
+
+                    round_pairings.push(Pairing::new(remaining_players.0[player1_idx], remaining_players.0[player2_idx]));
+
+                    remaining_players.0.remove(player1_idx.max(player2_idx));
+                    remaining_players.0.remove(player1_idx.min(player2_idx));
+
+                }
+
+                if add_round {
+                    tournament.rounds.push(Round::from_pairings(round_pairings, remaining_players.0.pop()));
+                }
+            }
             "report" => {
 
                 let Some(round) = tournament.rounds.last_mut() else {
@@ -337,7 +408,7 @@ fn main() {
                 
             }
             "list" => {
-                println!("Commands: [add, remove, standings, start, round, games, export, list]");
+                println!("Commands: [add, remove, standings, start, reject, manual, round, games, export, list]");
             }
             // testing only
             "sweep" => {
