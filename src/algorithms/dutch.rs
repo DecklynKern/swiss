@@ -1,4 +1,5 @@
 use crate::*;
+use itertools::Itertools;
 
 impl Round {
 
@@ -106,7 +107,10 @@ fn try_pair_brackets(mut brackets: Vec<PlayerIDList>, already_played: &[PlayerID
         }
     }
 
-    if move_down_players.0.len() == 0 {
+    // println!("FINAL PAIRINGS");
+    // println!("{final_pairings:?}");
+
+    if move_down_players.0.is_empty() {
         Some(final_pairings)
     }
     else if brackets.len() > 1 {
@@ -160,51 +164,45 @@ fn pair_bracket(move_down_players: PlayerIDList, resident_players: PlayerIDList,
         s2.0.push(id);
     }
 
+    let mut s1_clone = PlayerIDList::new();
+    let mut s2_clone = PlayerIDList::new();
+
     let mut accepted_pairings = Vec::new();
 
-    let mut s1_swap_idx = 1;
-    let mut s2_swap_idx = 1;
+    for s1_permutation in s1.0.iter().cloned().permutations(s1.0.len()) {
 
-    while !s1.0.is_empty() {
-
-        if let Some(pairing) = try_create_pairing(&mut s1, &mut s2, already_played) {
-            accepted_pairings.push(pairing);
-            s1_swap_idx = 1;
-            s2_swap_idx = 1;
-        }
-        else {
-
-            if s1_swap_idx == s1.0.len() {
-
-                if s2_swap_idx == s2.0.len() {
-                    break;
-                }
+        accepted_pairings.clear();
+        
+        s1_clone = PlayerIDList(s1_permutation);
+        s2_clone = s2.clone();
     
-                s2.0.swap(0, s2_swap_idx);
-                s2_swap_idx += 1;
+        while !s1_clone.0.is_empty() {
+    
+            if let Some(pairing) = try_create_pairing(&mut s1_clone, &mut s2_clone, already_played) {
+                accepted_pairings.push(pairing);
             }
             else {
-                s1.0.swap(0, s1_swap_idx);
-                s1_swap_idx += 1;
+                break;
             }
         }
     }
 
     let next_move_downs = PlayerIDList(
-        s1.0.iter()
-            .chain(s2.0.iter())
+        s1_clone.0.iter()
+            .chain(s2_clone.0.iter())
             .chain(limbo.0.iter())
             .cloned()
             .collect());
 
+    // println!("\n{s1:?}");
+    // println!("{s2:?}");
 
-    // println!("\n");
     // println!("{move_down_players:?}");
     // println!("{resident_players:?}");
     // println!("{already_played:?}");
     // println!("m0: {m0}, max_pairs: {max_pairs}, m1: {m1}, n1: {n1}");
     // println!("{accepted_pairings:?}");
-    // println!("{next_move_downs:?}");
+    // println!("{next_move_downs:?}\n");
 
     (accepted_pairings, next_move_downs)
 
