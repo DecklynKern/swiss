@@ -175,6 +175,8 @@ fn pair_bracket(move_down_players: PlayerIDList, resident_players: PlayerIDList,
         
         s1_clone = PlayerIDList(s1_permutation);
         s2_clone = s2.clone();
+
+        let mut successful = true;
     
         while !s1_clone.0.is_empty() {
     
@@ -182,8 +184,13 @@ fn pair_bracket(move_down_players: PlayerIDList, resident_players: PlayerIDList,
                 accepted_pairings.push(pairing);
             }
             else {
+                successful = false;
                 break;
             }
+        }
+
+        if successful {
+            break;
         }
     }
 
