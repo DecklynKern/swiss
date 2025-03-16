@@ -18,13 +18,17 @@ fn main() {
 
     let stdin = std::io::stdin();
     let mut stdout = std::io::stdout();
-    let mut read_line = |prompt: &str| {
+    let mut read_line = |prompt: &str, lower: bool| {
 
         print!("{}", prompt);
         let _ = stdout.flush();
         
         let mut line = String::new();
         let _ = stdin.read_line(&mut line);
+
+        if (lower) {
+            line = line.to_lowercase();
+        }
         
         line.to_lowercase().trim().to_owned()
 
@@ -70,14 +74,14 @@ fn main() {
 
     loop {
 
-        let command = read_line("\n> ");
+        let command = read_line("\n> ", true);
         let split: Vec<_> = command.split(' ').collect();
 
         match split[0] {
             "add" => {
                 tournament.add_player(
-                    read_line("Name: "),
-                    read_line("Rating (leave blank for unknown): ").parse().ok()
+                    read_line("Name: ", false),
+                    read_line("Rating (leave blank for unknown): ", true).parse().ok()
                 );
             }
             "remove" => {
@@ -86,7 +90,7 @@ fn main() {
                     split[1..].join(" ")
                 }
                 else {
-                    read_line("Name: ")
+                    read_line("Name: ", false)
                 };
 
                 if !tournament.remove_player(&name) {
@@ -243,7 +247,7 @@ fn main() {
 
             }
             "reject" => {
-                if read_line("Are you sure you want to reject the current round? ").to_lowercase().chars().nth(0).unwrap_or('n') == 'y' {
+                if read_line("Are you sure you want to reject the current round? ", true).to_lowercase().chars().nth(0).unwrap_or('n') == 'y' {
                     tournament.rounds.pop();
                 }
             }
@@ -268,7 +272,7 @@ fn main() {
                         println!("({}) {}", idx, tournament.players[player].name);
                     }
 
-                    let response = read_line("Enter white player number ('cancel' to cancel): ");
+                    let response = read_line("Enter white player number ('cancel' to cancel): ", true);
 
                     if response == "cancel" {
                         add_round = false;
@@ -286,7 +290,7 @@ fn main() {
                         continue;
                     }
 
-                    let Ok(player2_idx) = read_line("Enter black player number: ").parse::<usize>()
+                    let Ok(player2_idx) = read_line("Enter black player number: ", true).parse::<usize>()
                     else {
                         println!("Error: invalid index");
                         continue;
@@ -310,7 +314,15 @@ fn main() {
                 }
 
                 if add_round {
-                    tournament.rounds.push(Round::from_pairings(round_pairings, remaining_players.0.pop()));
+                    
+                    let mut round = Round::from_pairings(round_pairings, remaining_players.0.pop());
+                    
+                    for board_num in 1..=round.games.len() {
+                        round.games[board_num - 1].board_number = board_num as u32;
+                    }
+
+                    tournament.rounds.push(round);
+
                 }
             }
             "report" => {
@@ -324,7 +336,7 @@ fn main() {
                     split[1].to_string()
                 }
                 else {
-                    read_line("Board number: ")
+                    read_line("Board number: ", true)
                 };
 
                 let Ok(board_number) = number_text.parse::<u32>()
@@ -342,7 +354,7 @@ fn main() {
                             split[2].to_string()
                         }
                         else {
-                            read_line(&format!("Result for white player ({}) [W]in/[D]raw/[L]oss/[U]nreport: ", tournament.players[game.white_player].name))
+                            read_line(&format!("Result for white player ({}) [W]in/[D]raw/[L]oss/[U]nreport: ", tournament.players[game.white_player].name), true)
                         };
                     
                         game.result = match result_string.to_lowercase().chars().next().unwrap() {
@@ -384,7 +396,7 @@ fn main() {
                     split[1..].join(" ")
                 }
                 else {
-                    read_line("Filename: ")
+                    read_line("Filename: ", true)
                 };
 
                 let Ok(mut file) = File::options()
