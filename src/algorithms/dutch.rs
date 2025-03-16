@@ -139,71 +139,76 @@ fn pair_bracket(move_down_players: PlayerIDList, resident_players: PlayerIDList,
 
     let n1 = if m0 == 0 {max_pairs} else {m1};
 
-    let mut s1 = PlayerIDList::new();
-    let mut s2 = PlayerIDList::new();
-    let mut limbo = PlayerIDList::new();
-
-    for &id in &move_down_players.0[..n1.min(m0)] {
-        s1.0.push(id);
-    }
-
-    if n1 < m0 {
-   
-        for &id in &move_down_players.0[n1..] {
-            limbo.0.push(id);
-        }
-    }
-
-    let num_residents_in_s1 = max_pairs.saturating_sub(m0);
-
-    for &id in &resident_players.0[..num_residents_in_s1] {
-        s1.0.push(id);
-    }
-
-    for &id in &resident_players.0[num_residents_in_s1..] {
-        s2.0.push(id);
-    }
-
-    let mut s1_clone = PlayerIDList::new();
-    let mut s2_clone = PlayerIDList::new();
-
     let mut accepted_pairings = Vec::new();
+    let mut next_move_downs = PlayerIDList::new();
 
-    for s1_permutation in s1.0.iter().cloned().permutations(s1.0.len()) {
+    'outer: for move_down_players_permutation in move_down_players.0.iter().cloned().permutations(m0) {
 
-        accepted_pairings.clear();
+        for resident_players_permutation in resident_players.0.iter().cloned().permutations(resident_players.0.len()) {
+
+            let mut s1 = PlayerIDList::new();
+            let mut s2 = PlayerIDList::new();
+            let mut limbo = PlayerIDList::new();
         
-        s1_clone = PlayerIDList(s1_permutation);
-        s2_clone = s2.clone();
-    
-        while !s1_clone.0.is_empty() {
-    
-            if let Some(pairing) = try_create_pairing(&mut s1_clone, &mut s2_clone, already_played) {
-                accepted_pairings.push(pairing);
+            for &id in &move_down_players_permutation[..n1.min(m0)] {
+                s1.0.push(id);
             }
-            else {
-                break;
+        
+            if n1 < m0 {
+        
+                for &id in &move_down_players_permutation[n1..] {
+                    limbo.0.push(id);
+                }
             }
+        
+            let num_residents_in_s1 = max_pairs.saturating_sub(m0);
+        
+            for &id in &resident_players_permutation[..num_residents_in_s1] {
+                s1.0.push(id);
+            }
+        
+            for &id in &resident_players_permutation[num_residents_in_s1..] {
+                s2.0.push(id);
+            }
+        
+            accepted_pairings = Vec::new();
+            let mut successful = true;
+        
+            while !s1.0.is_empty() {
+        
+                if let Some(pairing) = try_create_pairing(&mut s1, &mut s2, already_played) {
+                    accepted_pairings.push(pairing);
+                }
+                else {
+                    successful = false;
+                    break;
+                }
+            }
+        
+            next_move_downs = PlayerIDList(
+                s1.0.iter()
+                    .chain(s2.0.iter())
+                    .chain(limbo.0.iter())
+                    .cloned()
+                    .collect());
+
+            if successful {
+                break 'outer;
+            }
+        
+            // println!("\n{s1:?}");
+            // println!("{s2:?}");
+        
+            // println!("{move_down_players:?}");
+            // println!("{resident_players:?}");
+            // println!("{already_played:?}");
+            // println!("m0: {m0}, max_pairs: {max_pairs}, m1: {m1}, n1: {n1}");
+            // println!("{accepted_pairings:?}");
+            // println!("{next_move_downs:?}\n");
+
         }
     }
-
-    let next_move_downs = PlayerIDList(
-        s1_clone.0.iter()
-            .chain(s2_clone.0.iter())
-            .chain(limbo.0.iter())
-            .cloned()
-            .collect());
-
-    // println!("\n{s1:?}");
-    // println!("{s2:?}");
-
-    // println!("{move_down_players:?}");
-    // println!("{resident_players:?}");
-    // println!("{already_played:?}");
-    // println!("m0: {m0}, max_pairs: {max_pairs}, m1: {m1}, n1: {n1}");
-    // println!("{accepted_pairings:?}");
-    // println!("{next_move_downs:?}\n");
-
+    
     (accepted_pairings, next_move_downs)
 
 }
