@@ -14,25 +14,23 @@ use error::*;
 use std::io::{Read, Write};
 use std::fs::File;
 
+fn read_line_full(prompt: &str) -> String {
+
+    print!("{}", prompt);
+    let _ = std::io::stdout().flush();
+        
+    let mut line = String::new();
+    let _ = std::io::stdin().read_line(&mut line);
+        
+    line.trim().to_owned()
+
+}
+
+fn read_line(prompt: &str) -> String {
+    read_line_full(prompt).to_lowercase()
+}
+
 fn main() {
-
-    let stdin = std::io::stdin();
-    let mut stdout = std::io::stdout();
-    let mut read_line = |prompt: &str, lower: bool| {
-
-        print!("{}", prompt);
-        let _ = stdout.flush();
-        
-        let mut line = String::new();
-        let _ = stdin.read_line(&mut line);
-
-        if (lower) {
-            line = line.to_lowercase();
-        }
-        
-        line.to_lowercase().trim().to_owned()
-
-    };
 
     let args = std::env::args().collect::<Vec<_>>();
 
@@ -74,14 +72,14 @@ fn main() {
 
     loop {
 
-        let command = read_line("\n> ", true);
+        let command = read_line("\n> ");
         let split: Vec<_> = command.split(' ').collect();
 
         match split[0] {
             "add" => {
                 tournament.add_player(
-                    read_line("Name: ", false),
-                    read_line("Rating (leave blank for unknown): ", true).parse().ok()
+                    read_line_full("Name: "),
+                    read_line("Rating (leave blank for unknown): ").parse().ok()
                 );
             }
             "remove" => {
@@ -90,7 +88,7 @@ fn main() {
                     split[1..].join(" ")
                 }
                 else {
-                    read_line("Name: ", false)
+                    read_line("Name: ")
                 };
 
                 if !tournament.remove_player(&name) {
@@ -247,7 +245,7 @@ fn main() {
 
             }
             "reject" => {
-                if read_line("Are you sure you want to reject the current round? ", true).to_lowercase().chars().nth(0).unwrap_or('n') == 'y' {
+                if read_line("Are you sure you want to reject the current round? ").to_lowercase().chars().nth(0).unwrap_or('n') == 'y' {
                     tournament.rounds.pop();
                 }
             }
@@ -272,7 +270,7 @@ fn main() {
                         println!("({}) {}", idx, tournament.players[player].name);
                     }
 
-                    let response = read_line("Enter white player number ('cancel' to cancel): ", true);
+                    let response = read_line("Enter white player number ('cancel' to cancel): ");
 
                     if response == "cancel" {
                         add_round = false;
@@ -290,7 +288,7 @@ fn main() {
                         continue;
                     }
 
-                    let Ok(player2_idx) = read_line("Enter black player number: ", true).parse::<usize>()
+                    let Ok(player2_idx) = read_line("Enter black player number: ").parse::<usize>()
                     else {
                         println!("Error: invalid index");
                         continue;
@@ -314,15 +312,7 @@ fn main() {
                 }
 
                 if add_round {
-                    
-                    let mut round = Round::from_pairings(round_pairings, remaining_players.0.pop());
-                    
-                    for board_num in 1..=round.games.len() {
-                        round.games[board_num - 1].board_number = board_num as u32;
-                    }
-
-                    tournament.rounds.push(round);
-
+                    tournament.rounds.push(Round::from_pairings(round_pairings, remaining_players.0.pop()));
                 }
             }
             "report" => {
@@ -336,7 +326,7 @@ fn main() {
                     split[1].to_string()
                 }
                 else {
-                    read_line("Board number: ", true)
+                    read_line("Board number: ")
                 };
 
                 let Ok(board_number) = number_text.parse::<u32>()
@@ -354,7 +344,7 @@ fn main() {
                             split[2].to_string()
                         }
                         else {
-                            read_line(&format!("Result for white player ({}) [W]in/[D]raw/[L]oss/[U]nreport: ", tournament.players[game.white_player].name), true)
+                            read_line(&format!("Result for white player ({}) [W]in/[D]raw/[L]oss/[U]nreport: ", tournament.players[game.white_player].name))
                         };
                     
                         game.result = match result_string.to_lowercase().chars().next().unwrap() {
@@ -396,7 +386,7 @@ fn main() {
                     split[1..].join(" ")
                 }
                 else {
-                    read_line("Filename: ", true)
+                    read_line("Filename: ")
                 };
 
                 let Ok(mut file) = File::options()
